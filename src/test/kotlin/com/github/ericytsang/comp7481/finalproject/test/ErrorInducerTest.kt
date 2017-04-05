@@ -6,6 +6,37 @@ import org.junit.Test
 class ErrorInducerTest
 {
     @Test
+    fun noErrorsTest()
+    {
+        val testSubject = ErrorInducer()
+        testSubject.currentBurstBitErrorsRemaining = 0
+        testSubject.targetBurstErrorFrequency = 0.0
+        testSubject.errorBitValue = true
+        testSubject.maxBurstLength = 10
+        testSubject.minBurstLength = 10
+        val bytes = listOf(
+            byteArrayOf(0),
+            byteArrayOf(0,0),
+            byteArrayOf(0,0,0),
+            byteArrayOf(0,0,0,0),
+            byteArrayOf(0,0,0,0,0),
+            byteArrayOf(0,0,0,0,0),
+            byteArrayOf(1,2,3,4,5,6,7,8),
+            byteArrayOf(9,10,11,12,13,14,15,16,17,18,19,20),
+            (Byte.MIN_VALUE..Byte.MAX_VALUE).map(Int::toByte).toByteArray())
+            .iterator()
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0,0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0,0).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(1,2,3,4,5,6,7,8).toList())
+        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(9,10,11,12,13,14,15,16,17,18,19,20).toList())
+        check(testSubject.transform(bytes)!!.toList() == (Byte.MIN_VALUE..Byte.MAX_VALUE).map(Int::toByte))
+    }
+
+    @Test
     fun setFirstNToValueBoundsCheckTest1()
     {
         TestUtils.exceptionExpected {setFirstNToValueTest(0,0,true,0.toByte())}
