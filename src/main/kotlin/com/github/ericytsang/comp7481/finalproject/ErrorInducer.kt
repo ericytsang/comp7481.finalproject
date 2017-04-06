@@ -45,7 +45,7 @@ class ErrorInducer:AbstractTransformer()
                     if (currentBurstBitErrorsRemaining == 0 && Math.random() < targetBurstErrorFrequency)
                     {
                         errorBitValue = Math.random() < 0.5
-                        currentBurstBitErrorsRemaining = minBurstLength+(Math.random()*maxBurstLength).toInt()
+                        currentBurstBitErrorsRemaining = minBurstLength+(Math.random()*(maxBurstLength-minBurstLength+1)).toInt()
                     }
 
                     // no error state right now...return actual bit

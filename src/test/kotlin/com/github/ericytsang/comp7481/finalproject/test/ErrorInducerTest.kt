@@ -37,6 +37,55 @@ class ErrorInducerTest
     }
 
     @Test
+    fun yesErrorsTest()
+    {
+        val testSubject = ErrorInducer()
+        testSubject.currentBurstBitErrorsRemaining = 0
+        testSubject.targetBurstErrorFrequency = 0.2
+        testSubject.errorBitValue = true
+        testSubject.maxBurstLength = 15
+        testSubject.minBurstLength = 5
+        val source = object:Iterator<ByteArray>
+        {
+            override fun hasNext():Boolean = true
+            override fun next():ByteArray = byteArrayOf(0,0,0,0)
+        }
+        val errorLengths = (testSubject.minBurstLength..testSubject.maxBurstLength).toCollection(mutableSetOf())
+        val bitGenerator = object:Iterator<Boolean>
+        {
+            private var remainingBits = mutableListOf<Boolean>()
+            override fun hasNext():Boolean = true
+            override fun next():Boolean
+            {
+                if (remainingBits.isEmpty())
+                {
+                    remainingBits = testSubject.transform(source)!!
+                        .flatMap()
+                        {
+                            listOf(
+                                0b10000000 and it.toInt() != 0,
+                                0b01000000 and it.toInt() != 0,
+                                0b00100000 and it.toInt() != 0,
+                                0b00010000 and it.toInt() != 0,
+                                0b00001000 and it.toInt() != 0,
+                                0b00000100 and it.toInt() != 0,
+                                0b00000010 and it.toInt() != 0,
+                                0b00000001 and it.toInt() != 0)
+                        }
+                        .toMutableList()
+                }
+                return remainingBits.removeAt(0)
+            }
+        }
+        while (errorLengths.isNotEmpty())
+        {
+            val errorBits = bitGenerator.asSequence().takeWhile {it}.toList()
+            check(errorBits.isEmpty() || errorBits.size >= testSubject.minBurstLength) {errorBits}
+            errorLengths.remove(errorBits.size)
+        }
+    }
+
+    @Test
     fun setFirstNToValueBoundsCheckTest1()
     {
         TestUtils.exceptionExpected {setFirstNToValueTest(0,0,true,0.toByte())}
