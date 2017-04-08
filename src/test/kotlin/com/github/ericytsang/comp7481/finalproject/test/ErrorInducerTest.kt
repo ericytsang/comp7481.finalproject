@@ -1,6 +1,6 @@
 package com.github.ericytsang.comp7481.finalproject.test
 
-import com.github.ericytsang.comp7481.finalproject.ErrorInducer
+import com.github.ericytsang.comp7481.finalproject.model.ErrorInducer
 import org.junit.Test
 
 class ErrorInducerTest
@@ -25,15 +25,15 @@ class ErrorInducerTest
             byteArrayOf(9,10,11,12,13,14,15,16,17,18,19,20),
             (Byte.MIN_VALUE..Byte.MAX_VALUE).map(Int::toByte).toByteArray())
             .iterator()
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0,0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(0,0,0,0,0).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(1,2,3,4,5,6,7,8).toList())
-        check(testSubject.transform(bytes)!!.toList() == byteArrayOf(9,10,11,12,13,14,15,16,17,18,19,20).toList())
-        check(testSubject.transform(bytes)!!.toList() == (Byte.MIN_VALUE..Byte.MAX_VALUE).map(Int::toByte))
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0,0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0,0,0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0,0,0,0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0,0,0,0,0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(0,0,0,0,0).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(1,2,3,4,5,6,7,8).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == byteArrayOf(9,10,11,12,13,14,15,16,17,18,19,20).toList())
+        check(testSubject.transform(bytes).next()!!.toList() == (Byte.MIN_VALUE..Byte.MAX_VALUE).map(Int::toByte))
     }
 
     @Test
@@ -59,7 +59,7 @@ class ErrorInducerTest
             {
                 if (remainingBits.isEmpty())
                 {
-                    remainingBits = testSubject.transform(source)!!
+                    remainingBits = testSubject.transform(source).next()!!
                         .flatMap()
                         {
                             listOf(

@@ -1,10 +1,9 @@
-package com.github.ericytsang.comp7481.finalproject
+package com.github.ericytsang.comp7481.finalproject.model
 
 import com.github.ericytsang.lib.randomstream.RandomInputStream
 
-class DataBlockGenerator:Iterator<ByteArray>
+class DataBlockGenerator(val dataBlockSize:Int = 16):Iterator<ByteArray>
 {
-    var dataBlockSize:Int = 16
     private val randomStream = RandomInputStream()
     override fun hasNext():Boolean = true
     override fun next():ByteArray

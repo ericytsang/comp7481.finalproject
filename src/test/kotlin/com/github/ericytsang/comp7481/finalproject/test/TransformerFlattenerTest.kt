@@ -1,9 +1,9 @@
 package com.github.ericytsang.comp7481.finalproject.test
 
-import com.github.ericytsang.comp7481.finalproject.DataBlockGenerator
-import com.github.ericytsang.comp7481.finalproject.SimplePaddingCodingStrategy
-import com.github.ericytsang.comp7481.finalproject.Transformer
-import com.github.ericytsang.comp7481.finalproject.TransformerFlattener
+import com.github.ericytsang.comp7481.finalproject.model.DataBlockGenerator
+import com.github.ericytsang.comp7481.finalproject.model.SimplePaddingCodingStrategy
+import com.github.ericytsang.comp7481.finalproject.model.Transformer
+import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
 import org.junit.Test
 import java.util.Arrays
 
@@ -19,7 +19,7 @@ class TransformerFlattenerTest
         check((1..1000)
             .asSequence()
             .map {testSubject.transform(dataBlockDenerator)}
-            .all {it!!.takeLast(codingStrategy.padding.size) == codingStrategy.padding.asList()})
+            .all {it.next()!!.takeLast(codingStrategy.padding.size) == codingStrategy.padding.asList()})
     }
 
     @Test
@@ -29,7 +29,7 @@ class TransformerFlattenerTest
         check((1..1000)
             .asSequence()
             .map {testSubject.transform(dataBlockDenerator)}
-            .all {it!!.takeLast(codingStrategy.padding.size*2) == codingStrategy.padding.asList()+codingStrategy.padding.asList()})
+            .all {it.next()!!.takeLast(codingStrategy.padding.size*2) == codingStrategy.padding.asList()+codingStrategy.padding.asList()})
     }
 
     @Test
@@ -38,15 +38,15 @@ class TransformerFlattenerTest
         var codeInput:ByteArray = byteArrayOf()
         codingStrategy.encoder.transformObservers += object:Transformer.Observer
         {
-            override fun onTransform(input:List<ByteArray>,output:ByteArray?)
+            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
             {
-                codeInput = input.single()
+                codeInput = input.single()!!
             }
         }
         val testSubject = TransformerFlattener(listOf(codingStrategy.encoder,codingStrategy.decoder))
         check((1..1000)
             .asSequence()
             .map {testSubject.transform(dataBlockDenerator)}
-            .all {Arrays.equals(it!!,codeInput)})
+            .all {Arrays.equals(it.next()!!,codeInput)})
     }
 }

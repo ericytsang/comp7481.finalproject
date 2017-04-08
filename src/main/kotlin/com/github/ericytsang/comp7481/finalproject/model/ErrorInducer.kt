@@ -1,4 +1,4 @@
-package com.github.ericytsang.comp7481.finalproject
+package com.github.ericytsang.comp7481.finalproject.model
 
 import java.util.LinkedList
 import kotlin.experimental.and
@@ -12,14 +12,14 @@ class ErrorInducer:AbstractTransformer()
     var targetBurstErrorFrequency = 0.0
     var minBurstLength = 1
     var maxBurstLength = 32
-    override fun transform(transformer:AbstractTransformer,source:Iterator<ByteArray>):ByteArray?
+    override fun transform(transformer:AbstractTransformer,source:Iterator<ByteArray?>):ByteArray?
     {
         val bytes = source.next()
         return bytes
-            .asSequence()
+            ?.asSequence()
 
             // map each byte to a list of 8 booleans
-            .map()
+            ?.map()
             {
                 byte ->
                 listOf(
@@ -34,7 +34,7 @@ class ErrorInducer:AbstractTransformer()
             }
 
             // introduce bit errors
-            .map()
+            ?.map()
             {
                 byteBits ->
                 byteBits.map()
@@ -64,7 +64,7 @@ class ErrorInducer:AbstractTransformer()
             }
 
             // rebuild the byte
-            .map()
+            ?.map()
             {
                 bits ->
                 var byte = 0
@@ -75,8 +75,8 @@ class ErrorInducer:AbstractTransformer()
                 }
                 byte.toByte()
             }
-            .toCollection(LinkedList())
-            .toByteArray()
+            ?.toCollection(LinkedList())
+            ?.toByteArray()
     }
 
     companion object

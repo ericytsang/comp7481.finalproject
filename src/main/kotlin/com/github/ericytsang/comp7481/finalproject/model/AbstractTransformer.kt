@@ -1,26 +1,33 @@
-package com.github.ericytsang.comp7481.finalproject
+package com.github.ericytsang.comp7481.finalproject.model
 
 import java.util.LinkedHashSet
 
 abstract class AbstractTransformer:Transformer,CodingStrategy.EncodingStrategy,CodingStrategy.DecodingStrategy
 {
-    override fun transform(source:Iterator<ByteArray>):ByteArray?
+    override fun transform(source:Iterator<ByteArray?>):Iterator<ByteArray?>
     {
-        val input = mutableListOf<ByteArray>()
-        val sourceWrapper = object:Iterator<ByteArray>
+        return object:Iterator<ByteArray?>
         {
-            override fun hasNext():Boolean = source.hasNext()
-            override fun next():ByteArray
+            override fun hasNext():Boolean = true
+            override fun next():ByteArray?
             {
-                val element = source.next()
-                input += element
-                return element
+                val input = mutableListOf<ByteArray?>()
+                val sourceWrapper = object:Iterator<ByteArray?>
+                {
+                    override fun hasNext():Boolean = true
+                    override fun next():ByteArray?
+                    {
+                        val element = source.next()
+                        input += element
+                        return element
+                    }
+                }
+                val output = transform(this@AbstractTransformer,sourceWrapper)
+                transformObservers.forEach {it.onTransform(input,output)}
+                return output
             }
         }
-        val output = transform(this,sourceWrapper)
-        transformObservers.forEach {it.onTransform(input,output)}
-        return output
     }
-    protected abstract fun transform(transformer:AbstractTransformer,source:Iterator<ByteArray>):ByteArray?
+    protected abstract fun transform(transformer:AbstractTransformer,source:Iterator<ByteArray?>):ByteArray?
     override val transformObservers:MutableSet<Transformer.Observer> = LinkedHashSet()
 }

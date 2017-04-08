@@ -1,4 +1,4 @@
-package com.github.ericytsang.comp7481.finalproject
+package com.github.ericytsang.comp7481.finalproject.model
 
 
 interface CodingStrategy
