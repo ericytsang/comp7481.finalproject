@@ -54,13 +54,15 @@
                     <SubstituteLabel fx:id="totalCodeLabel" text="Total code bits: $ bits" />
                     <SubstituteLabel fx:id="bitErrorCountLabel" text="Bit error count: $ bits" />
                     <SubstituteLabel fx:id="burstErrorCountLabel" text="Burst error count: $ bursts" />
-                    <SubstituteLabel fx:id="errorsDiscardedLabel" text="Errors discarded: $ bits" />
+                    <SubstituteLabel fx:id="errorsDiscardedLabel" text="Bits discarded: $ bits" />
                     <SubstituteLabel fx:id="errorsAcceptedLabel" text="Erroneous bits accepted: $ bits" />
                     <SubstituteLabel fx:id="normalAcceptedLabel" text="Correct bits accepted: $ bits" />
                 </VBox>
                 <PieChart
-                    maxHeight="175"
-                    maxWidth="175"/>
+                    fx:id="pieChart"
+                    animated="false"
+                    maxHeight="300"
+                    maxWidth="300"/>
             </HBox>
         </bottom>
     </BorderPane>

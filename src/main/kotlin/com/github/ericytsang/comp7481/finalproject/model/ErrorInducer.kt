@@ -1,17 +1,12 @@
 package com.github.ericytsang.comp7481.finalproject.model
 
 import java.util.LinkedList
-import kotlin.experimental.and
-import kotlin.experimental.inv
-import kotlin.experimental.or
 
 class ErrorInducer:AbstractTransformer()
 {
     var burstErrorCounter = 0L
     var currentBurstBitErrorsRemaining = 0
-        private set
     var errorBitValue = false
-        private set
     var targetBurstErrorFrequency = 0.0
     var minBurstLength = 1
     var maxBurstLength = 32
@@ -56,49 +51,8 @@ class ErrorInducer:AbstractTransformer()
             }
 
             // rebuild the byte
-            ?.map()
-            {
-                bits ->
-                var byte = 0
-                for (i in 0..7)
-                {
-                    val mask = 0b10000000
-                    if (bits[i]) byte = byte or mask.ushr(i)
-                }
-                byte.toByte()
-            }
+            ?.map(List<Boolean>::byte)
             ?.toCollection(LinkedList())
             ?.toByteArray()
-    }
-
-    companion object
-    {
-        fun setFirstNToValue(subject:Byte,n:Int,value:Boolean):Byte
-        {
-            require(n in 1..8)
-            val mask = 255.shl(8-n).toByte()
-            return if (value)
-            {
-                subject or mask
-            }
-            else
-            {
-                subject and mask.inv()
-            }
-        }
-
-        fun setLastNToValue(subject:Byte,n:Int,value:Boolean):Byte
-        {
-            require(n in 1..8)
-            val mask = 255.ushr(8-n).toByte()
-            return if (value)
-            {
-                subject or mask
-            }
-            else
-            {
-                subject and mask.inv()
-            }
-        }
     }
 }

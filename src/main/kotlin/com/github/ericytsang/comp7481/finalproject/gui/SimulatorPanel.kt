@@ -6,11 +6,13 @@ import com.github.ericytsang.comp7481.finalproject.model.ErrorInducer
 import com.github.ericytsang.comp7481.finalproject.model.Transformer
 import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
 import com.github.ericytsang.comp7481.finalproject.model.bits
+import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform
 import javafx.beans.Observable
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
+import javafx.scene.chart.PieChart
 import javafx.scene.control.Slider
 import javafx.scene.layout.VBox
 import java.io.Closeable
@@ -38,6 +40,7 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     @FXML lateinit var errorsDiscardedLabel:SubstituteLabel
     @FXML lateinit var errorsAcceptedLabel:SubstituteLabel
     @FXML lateinit var normalAcceptedLabel:SubstituteLabel
+    @FXML lateinit var pieChart:PieChart
 
     private var totalDataBitsEncoded:Long = 0
     private var totalCodeBits:Long = 0
@@ -48,6 +51,12 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     private var goodBitsAcceptedCount:Long = 0
     private val statsUpdater = object:UiComponent()
     {
+        private val goodBitsAcceptedPieData = PieChart.Data("correct bits accepted",0.0)
+        private val badBitsAcceptedPieData = PieChart.Data("erroneous bits accepted",0.0)
+        private val badBitsRejectedPieData = PieChart.Data("bits discarded",0.0)
+        private val pieChartData = ObservableListWrapper(listOf(
+            goodBitsAcceptedPieData,badBitsAcceptedPieData,badBitsRejectedPieData))
+
         fun update() = publishUpdate()
         {
             efficiencyLabel.substitute((totalDataBitsEncoded/(totalCodeBits.takeIf {it != 0.toLong()}?:1)*100).toString())
@@ -58,6 +67,13 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             errorsDiscardedLabel.substitute(badBitsRejectedCount.toString())
             errorsAcceptedLabel.substitute(badBitsAcceptedCount.toString())
             normalAcceptedLabel.substitute(goodBitsAcceptedCount.toString())
+            goodBitsAcceptedPieData.pieValue = goodBitsAcceptedCount.toDouble()
+            badBitsAcceptedPieData.pieValue = badBitsAcceptedCount.toDouble()
+            badBitsRejectedPieData.pieValue = badBitsRejectedCount.toDouble()
+            if (pieChart.data !== pieChartData)
+            {
+                pieChart.data = pieChartData
+            }
         }
     }
 
@@ -91,11 +107,12 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     override fun initialize(location:URL,resources:ResourceBundle?)
     {
-        resetStats()
+        onInputsChanged()
         dataBlockSizeSlider.valueProperty().addListener {_:Observable -> onInputsChanged()}
         minBurstErrorSizeSlider.valueProperty().addListener {_:Observable -> onInputsChanged()}
         maxBurstErrorSizeSlider.valueProperty().addListener {_:Observable -> onInputsChanged()}
         burstErrorFrequencySlider.valueProperty().addListener {_:Observable -> onInputsChanged()}
+        codePanel.items.addListener {_:Observable -> onInputsChanged()}
     }
 
     override fun close()
@@ -105,7 +122,13 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     @FXML fun resetStats()
     {
-        worker = Worker(codePanel.items.map {it.codingStrategy})
+        totalDataBitsEncoded = 0
+        totalCodeBits = 0
+        bitErrorCount = 0
+        burstErrorCount = 0
+        badBitsAcceptedCount = 0
+        badBitsRejectedCount = 0
+        goodBitsAcceptedCount = 0
     }
 
     @FXML fun onInputsChanged()
@@ -123,15 +146,8 @@ class SimulatorPanel:VBox(),Initializable,Closeable
         // update UI
         controlsUpdater.update()
 
-        // update data generator and error inducer
-        val worker = worker
-        if (worker != null)
-        {
-            worker.dataGenerator.dataBlockSize = dataBlockSizeSlider.value.toInt()
-            worker.errorInducer.minBurstLength = minBurstErrorSizeSlider.value.toInt()
-            worker.errorInducer.maxBurstLength = maxBurstErrorSizeSlider.value.toInt()
-            worker.errorInducer.targetBurstErrorFrequency = burstErrorFrequencySlider.value
-        }
+        // restart worker
+        worker = Worker(codePanel.items.map {it.codingStrategy})
     }
 
     private inner class Worker(codingStrategies:List<CodingStrategy>):Thread()
@@ -166,21 +182,17 @@ class SimulatorPanel:VBox(),Initializable,Closeable
         private val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
             .transform(noisyChannel)
 
+        init
+        {
+            // update error inducer and data block generator as per inputs
+            dataGenerator.dataBlockSize = dataBlockSizeSlider.value.toInt()
+            errorInducer.minBurstLength = minBurstErrorSizeSlider.value.toInt()
+            errorInducer.maxBurstLength = maxBurstErrorSizeSlider.value.toInt()
+            errorInducer.targetBurstErrorFrequency = burstErrorFrequencySlider.value/100
+        }
+
         override fun run()
         {
-            // reset all statistics
-            totalDataBitsEncoded = 0
-            totalCodeBits = 0
-            bitErrorCount = 0
-            burstErrorCount = 0
-            badBitsAcceptedCount = 0
-            badBitsRejectedCount = 0
-            goodBitsAcceptedCount = 0
-
-            // refresh inputs to set properties of error inducer and data block
-            // generator
-            onInputsChanged()
-
             // simulate & collect statistics
             while (!isInterrupted)
             {
