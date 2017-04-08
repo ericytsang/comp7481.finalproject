@@ -9,7 +9,7 @@
 <?import javafx.scene.chart.PieChart?>
 <?import com.github.ericytsang.comp7481.finalproject.gui.SubstituteLabel?>
 <?import javafx.scene.control.Button?>
-<fx:root prefHeight="600.0" prefWidth="600.0" type="com.github.ericytsang.comp7481.finalproject.gui.SimulatorPanel"
+<fx:root prefHeight="600.0" prefWidth="700.0" type="com.github.ericytsang.comp7481.finalproject.gui.SimulatorPanel"
     xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.112">
 
     <BorderPane VBox.vgrow="ALWAYS">
@@ -21,24 +21,40 @@
                 <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0" /></padding>
                 <VBox spacing="8.0">
                     <SubstituteLabel fx:id="dataBlockSizeLabel" text="Data block size: $ bits" />
-                    <Slider fx:id="dataBlockSizeSlider" min="1" max="8192" />
+                    <Slider
+                        fx:id="dataBlockSizeSlider"
+                        min="1" max="8192"
+                        majorTickUnit="2048"
+                        showTickLabels="true"
+                        showTickMarks="true"/>
                     <SubstituteLabel fx:id="minBurstErrorSizeLabel" text="Minimum burst error length: $ bits" />
-                    <Slider fx:id="minBurstErrorSizeSlider" min="1" max="8192" />
+                    <Slider
+                        fx:id="minBurstErrorSizeSlider"
+                        min="1" max="8192"
+                        majorTickUnit="2048"
+                        showTickLabels="true"
+                        showTickMarks="true"/>
                     <SubstituteLabel fx:id="maxBurstErrorSizeLabel" text="Maximum burst error length: $ bits" />
-                    <Slider fx:id="maxBurstErrorSizeSlider" min="1" max="8192" />
+                    <Slider
+                        fx:id="maxBurstErrorSizeSlider"
+                        min="1" max="8192"
+                        majorTickUnit="2048"
+                        showTickLabels="true"
+                        showTickMarks="true"/>
                     <SubstituteLabel fx:id="burstErrorFrequencyLabel" text="Burst error frequency: $%" />
-                    <Slider fx:id="burstErrorFrequencySlider"/>
+                    <Slider
+                        fx:id="burstErrorFrequencySlider"
+                        showTickLabels="true"
+                        showTickMarks="true"/>
                     <Button onAction="#resetStats" text="Reset statistics"/>
                 </VBox>
                 <VBox spacing="8.0">
                     <SubstituteLabel fx:id="efficiencyLabel" text="Code rate: $%" />
                     <SubstituteLabel fx:id="totalDataTxLabel" text="Total data bits encoded: $ bits" />
-                    <SubstituteLabel fx:id="totalDataRxLabel" text="Total data bits decoded: $ bits" />
                     <SubstituteLabel fx:id="totalCodeLabel" text="Total code bits: $ bits" />
                     <SubstituteLabel fx:id="bitErrorCountLabel" text="Bit error count: $ bits" />
                     <SubstituteLabel fx:id="burstErrorCountLabel" text="Burst error count: $ bursts" />
                     <SubstituteLabel fx:id="errorsDiscardedLabel" text="Errors discarded: $ bits" />
-                    <SubstituteLabel fx:id="errorsCorrectedLabel" text="Errors corrected: $ bits" />
                     <SubstituteLabel fx:id="errorsAcceptedLabel" text="Erroneous bits accepted: $ bits" />
                     <SubstituteLabel fx:id="normalAcceptedLabel" text="Correct bits accepted: $ bits" />
                 </VBox>

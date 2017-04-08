@@ -7,8 +7,11 @@ import kotlin.experimental.or
 
 class ErrorInducer:AbstractTransformer()
 {
+    var burstErrorCounter = 0L
     var currentBurstBitErrorsRemaining = 0
+        private set
     var errorBitValue = false
+        private set
     var targetBurstErrorFrequency = 0.0
     var minBurstLength = 1
     var maxBurstLength = 32
@@ -19,19 +22,7 @@ class ErrorInducer:AbstractTransformer()
             ?.asSequence()
 
             // map each byte to a list of 8 booleans
-            ?.map()
-            {
-                byte ->
-                listOf(
-                    (0b10000000 and byte.toInt()) != 0,
-                    (0b01000000 and byte.toInt()) != 0,
-                    (0b00100000 and byte.toInt()) != 0,
-                    (0b00010000 and byte.toInt()) != 0,
-                    (0b00001000 and byte.toInt()) != 0,
-                    (0b00000100 and byte.toInt()) != 0,
-                    (0b00000010 and byte.toInt()) != 0,
-                    (0b00000001 and byte.toInt()) != 0)
-            }
+            ?.map(Byte::bits)
 
             // introduce bit errors
             ?.map()
@@ -46,6 +37,7 @@ class ErrorInducer:AbstractTransformer()
                     {
                         errorBitValue = Math.random() < 0.5
                         currentBurstBitErrorsRemaining = minBurstLength+(Math.random()*(maxBurstLength-minBurstLength+1)).toInt()
+                        burstErrorCounter++
                     }
 
                     // no error state right now...return actual bit

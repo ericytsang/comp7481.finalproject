@@ -1,5 +1,6 @@
 package com.github.ericytsang.comp7481.finalproject.model
 
+import java.util.Collections
 import java.util.LinkedHashSet
 
 abstract class AbstractTransformer:Transformer,CodingStrategy.EncodingStrategy,CodingStrategy.DecodingStrategy
@@ -29,5 +30,5 @@ abstract class AbstractTransformer:Transformer,CodingStrategy.EncodingStrategy,C
         }
     }
     protected abstract fun transform(transformer:AbstractTransformer,source:Iterator<ByteArray?>):ByteArray?
-    override val transformObservers:MutableSet<Transformer.Observer> = LinkedHashSet()
+    override val transformObservers:MutableSet<Transformer.Observer> = Collections.synchronizedSet(LinkedHashSet())
 }
