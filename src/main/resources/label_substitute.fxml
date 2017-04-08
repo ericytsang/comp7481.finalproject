@@ -1,0 +1,3 @@
+<fx:root
+    xmlns:fx="http://javafx.com/fxml"
+    type="com.github.ericytsang.comp7481.finalproject.gui.SubstituteLabel"/>
