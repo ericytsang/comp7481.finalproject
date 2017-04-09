@@ -21,9 +21,9 @@ import javafx.scene.control.Slider
 import javafx.scene.layout.VBox
 import java.io.Closeable
 import java.net.URL
+import java.text.DecimalFormat
 import java.util.ResourceBundle
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import java.util.concurrent.FutureTask
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
