@@ -192,18 +192,23 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             val isCorrupted = codeBlock != noisyCodeBlock
             efficiency = (dataBlocks.sumBy {it.size}.toDouble()/codeBlock.size).times(100).toByte()
             dataBlocksEncoded += dataBlocks.size
+            val zipped = dataBlocks.zip(decodedBlocks)
             if (isCorrupted)
             {
                 codeBlocksCorrupted += 1
                 dataBlocksCorrupted += dataBlocks.size
-                dataBlocksRecovered += dataBlocks.zip(decodedBlocks).count {it.first == it.second}
+                dataBlocksRecovered += zipped.count {it.first == it.second}
             }
             else
             {
-                dataBlocksAccepted += dataBlocks.zip(decodedBlocks).count {it.first == it.second}
+                dataBlocksAccepted += zipped.count {it.first == it.second}
             }
             dataBlocksDiscarded += decodedBlocks.count {it == null}
-            corruptDataBlocksAccepted += dataBlocks.zip(decodedBlocks).count {it.first != it.second && it.second != null}
+            corruptDataBlocksAccepted += zipped.count {it.second != null && it.first != it.second}
+//            zipped.forEach {
+//                if (it.second != null && it.first != it.second) println("corrupt&accepted dataBlocks: $dataBlocks, codeBlock: $codeBlock, noisyCodeBlock: $noisyCodeBlock ,decodedBlocks: $decodedBlocks")
+//                if (isCorrupted && it.first == it.second) println("corrupt&recovered dataBlocks: $dataBlocks, codeBlock: $codeBlock, noisyCodeBlock: $noisyCodeBlock ,decodedBlocks: $decodedBlocks")
+//            }
             statsUpdater.update()
         }
     }
