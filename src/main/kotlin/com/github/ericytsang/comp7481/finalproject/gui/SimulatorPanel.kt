@@ -7,6 +7,7 @@ import com.github.ericytsang.comp7481.finalproject.model.SimpleHammingCodingStra
 import com.github.ericytsang.comp7481.finalproject.model.Transformer
 import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
 import com.github.ericytsang.comp7481.finalproject.model.bits
+import com.github.ericytsang.comp7481.finalproject.model.next
 import com.github.ericytsang.lib.concurrent.future
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform
@@ -38,48 +39,49 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     @FXML lateinit var burstErrorFrequencyLabel:SubstituteLabel
     @FXML lateinit var burstErrorFrequencySlider:Slider
     @FXML lateinit var efficiencyLabel:SubstituteLabel
-    @FXML lateinit var totalDataTxLabel:SubstituteLabel
-    @FXML lateinit var totalCodeLabel:SubstituteLabel
-    @FXML lateinit var bitErrorCountLabel:SubstituteLabel
-    @FXML lateinit var burstErrorCountLabel:SubstituteLabel
-    @FXML lateinit var errorsDiscardedLabel:SubstituteLabel
-    @FXML lateinit var errorsAcceptedLabel:SubstituteLabel
-    @FXML lateinit var normalAcceptedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksEncodedLabel:SubstituteLabel
+    @FXML lateinit var codeBlocksCorruptedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksCorruptedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksAcceptedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksRecoveredLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksDiscardedLabel:SubstituteLabel
+    @FXML lateinit var corruptDataBlocksAcceptedLabel:SubstituteLabel
     @FXML lateinit var pieChart:PieChart
 
-    private var totalDataBitsEncoded:Long = 0
-    private var totalCodeBits:Long = 0
-    private var bitErrorCount:Long = 0
-    private var burstErrorCount:Long = 0
-    private var badBitsAcceptedCount:Long = 0
-    private var badBitsRejectedCount:Long = 0
-    private var goodBitsAcceptedCount:Long = 0
+    private var efficiency:Byte = 0
+    private var dataBlocksEncoded:Long = 0
+    private var codeBlocksCorrupted:Long = 0
+    private var dataBlocksCorrupted:Long = 0
+    private var dataBlocksAccepted:Long = 0
+    private var dataBlocksRecovered:Long = 0
+    private var dataBlocksDiscarded:Long = 0
+    private var corruptDataBlocksAccepted:Long = 0
     private val statsUpdater = object:UiComponent()
     {
-        private val goodBitsAcceptedPieData = PieChart.Data("correct bits accepted",0.0)
-        private val correctedBitsAcceptedPieData = PieChart.Data("corrected bits accepted",0.0)
-        private val badBitsAcceptedPieData = PieChart.Data("erroneous bits accepted",0.0)
-        private val badBitsRejectedPieData = PieChart.Data("bits discarded",0.0)
+        private val dataBlocksAcceptedPieData = PieChart.Data("Data blocks accepted",0.0)
+        private val dataBlocksRecoveredPieData = PieChart.Data("Data blocks recovered",0.0)
+        private val dataBlocksDiscardedPieData = PieChart.Data("Data blocks discarded",0.0)
+        private val corruptDataBlocksAcceptedPieData = PieChart.Data("Corrupt data blocks accepted",0.0)
         private val pieChartData = ObservableListWrapper(listOf(
-            goodBitsAcceptedPieData,
-            correctedBitsAcceptedPieData,
-            badBitsAcceptedPieData,
-            badBitsRejectedPieData))
+            dataBlocksAcceptedPieData,
+            dataBlocksRecoveredPieData,
+            dataBlocksDiscardedPieData,
+            corruptDataBlocksAcceptedPieData))
 
         fun update() = publishUpdate()
         {
-            efficiencyLabel.substitute((totalDataBitsEncoded.toDouble()/(totalCodeBits.takeIf {it != 0.toLong()}?:1)*100).toString())
-            totalDataTxLabel.substitute(totalDataBitsEncoded.toString())
-            totalCodeLabel.substitute(totalCodeBits.toString())
-            bitErrorCountLabel.substitute(bitErrorCount.toString())
-            burstErrorCountLabel.substitute(burstErrorCount.toString())
-            errorsDiscardedLabel.substitute(badBitsRejectedCount.toString())
-            errorsAcceptedLabel.substitute(badBitsAcceptedCount.toString())
-            normalAcceptedLabel.substitute(goodBitsAcceptedCount.toString())
-            goodBitsAcceptedPieData.pieValue = (goodBitsAcceptedCount-(bitErrorCount-badBitsAcceptedCount)).toDouble()
-            correctedBitsAcceptedPieData.pieValue = (bitErrorCount-badBitsAcceptedCount).toDouble()
-            badBitsAcceptedPieData.pieValue = badBitsAcceptedCount.toDouble()
-            badBitsRejectedPieData.pieValue = badBitsRejectedCount.toDouble()
+            efficiencyLabel.substitute(efficiency.toString())
+            dataBlocksEncodedLabel.substitute(dataBlocksEncoded.toString())
+            codeBlocksCorruptedLabel.substitute(codeBlocksCorrupted.toString())
+            dataBlocksCorruptedLabel.substitute(dataBlocksCorrupted.toString())
+            dataBlocksAcceptedLabel.substitute(dataBlocksAccepted.toString())
+            dataBlocksRecoveredLabel.substitute(dataBlocksRecovered.toString())
+            dataBlocksDiscardedLabel.substitute(dataBlocksDiscarded.toString())
+            corruptDataBlocksAcceptedLabel.substitute(corruptDataBlocksAccepted.toString())
+            dataBlocksAcceptedPieData.pieValue = dataBlocksAccepted.toDouble()
+            dataBlocksRecoveredPieData.pieValue = dataBlocksRecovered.toDouble()
+            dataBlocksDiscardedPieData.pieValue = dataBlocksDiscarded.toDouble()
+            corruptDataBlocksAcceptedPieData.pieValue = corruptDataBlocksAccepted.toDouble()
             if (pieChart.data !== pieChartData)
             {
                 pieChart.data = pieChartData
@@ -98,22 +100,6 @@ class SimulatorPanel:VBox(),Initializable,Closeable
         }
     }
 
-    private val workerExecutor = object
-    {
-        private val executorService = Executors.newSingleThreadExecutor()
-        private var lastFuture:FutureTask<*>? = null
-        fun submitTask(task:()->Unit)
-        {
-            lastFuture?.cancel(false)
-            lastFuture = future(false,block = task)
-            executorService.execute(lastFuture)
-        }
-        fun close()
-        {
-            executorService.shutdown()
-        }
-    }
-
     private var worker:Worker? = null
         set(value)
         {
@@ -122,14 +108,6 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             field = value
             field?.start()
         }
-
-    init
-    {
-        val fxmlLoader = FXMLLoader(javaClass.classLoader.getResource("window_simulator.fxml")!!)
-        fxmlLoader.setRoot(this)
-        fxmlLoader.setController(this)
-        fxmlLoader.load<Any>()
-    }
 
     override fun initialize(location:URL,resources:ResourceBundle?)
     {
@@ -149,13 +127,14 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     @FXML fun resetStats()
     {
-        totalDataBitsEncoded = 0
-        totalCodeBits = 0
-        bitErrorCount = 0
-        burstErrorCount = 0
-        badBitsAcceptedCount = 0
-        badBitsRejectedCount = 0
-        goodBitsAcceptedCount = 0
+        efficiency = 0
+        dataBlocksEncoded = 0
+        codeBlocksCorrupted = 0
+        dataBlocksCorrupted = 0
+        dataBlocksAccepted = 0
+        dataBlocksRecovered = 0
+        dataBlocksDiscarded = 0
+        corruptDataBlocksAccepted = 0
     }
 
     @FXML fun onInputsChanged()
@@ -174,76 +153,120 @@ class SimulatorPanel:VBox(),Initializable,Closeable
         controlsUpdater.update()
 
         // restart worker
-        val worker = Worker(listOf(SimpleHammingCodingStrategy())/*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
+        val worker = Worker(
+            minBurstErrorSizeSlider.value.toInt(),
+            maxBurstErrorSizeSlider.value.toInt(),
+            burstErrorFrequencySlider.value/100,
+            dataBlockSizeSlider.value.toInt(),
+            workerListener,
+            emptyList()/*listOf(SimpleHammingCodingStrategy())*//*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
         workerExecutor.submitTask()
         {
             this.worker = worker
         }
     }
 
-    private inner class Worker(val codingStrategies:List<CodingStrategy>):Thread()
+    private val workerExecutor = object
     {
+        private val executorService = Executors.newSingleThreadExecutor()
+        private var lastFuture:FutureTask<*>? = null
+        fun submitTask(task:()->Unit)
+        {
+            lastFuture?.cancel(false)
+            lastFuture = future(false,block = task)
+            executorService.execute(lastFuture)
+        }
+        fun close()
+        {
+            executorService.shutdown()
+        }
+    }
+
+    private val workerListener = object:Worker.Listener
+    {
+        override fun onCycle(dataBlocks:List<List<Byte>>,codeBlock:List<Byte>,noisyCodeBlock:List<Byte>,decodedBlocks:List<List<Byte>?>)
+        {
+            val isCorrupted = codeBlock != noisyCodeBlock
+            efficiency = (dataBlocks.sumBy {it.size}.toDouble()/codeBlock.size).times(100).toByte()
+            dataBlocksEncoded += dataBlocks.size
+            if (isCorrupted)
+            {
+                codeBlocksCorrupted += 1
+                dataBlocksCorrupted += dataBlocks.size
+                dataBlocksRecovered += dataBlocks.zip(decodedBlocks).count {it.first == it.second}
+            }
+            else
+            {
+                dataBlocksAccepted += dataBlocks.zip(decodedBlocks).count {it.first == it.second}
+            }
+            dataBlocksDiscarded += decodedBlocks.count {it == null}
+            corruptDataBlocksAccepted += dataBlocks.zip(decodedBlocks).count {it.first != it.second && it.second != null}
+            statsUpdater.update()
+        }
+    }
+
+    private class Worker(
+        val minBurstErrorSize:Int,
+        val maxBurstErrorSize:Int,
+        val burstErrorFrequency:Double,
+        val dataBlockSize:Int,
+        val listener:Listener,
+        val codingStrategies:List<CodingStrategy>):Thread()
+    {
+        private val dataGenerator = DataBlockGenerator(dataBlockSize)
+        private val encoderObserver = object:Transformer.Observer
+        {
+            val rawInput = mutableListOf<ByteArray?>()
+            val rawOutput = mutableListOf<ByteArray?>()
+            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+            {
+                rawInput += input
+                rawOutput += output
+            }
+        }
+        private val encoder = TransformerFlattener(codingStrategies.map {it.encoder})
+            .apply {transformObservers += encoderObserver}
+            .transform(dataGenerator)
+        private val errorInducerObserver = object:Transformer.Observer
+        {
+            val rawOutput = mutableListOf<ByteArray?>()
+            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+            {
+                rawOutput += output
+            }
+        }
+        private val errorInducer = ErrorInducer()
+            .apply {
+                transformObservers += errorInducerObserver
+                minBurstLength = minBurstErrorSize
+                maxBurstLength = maxBurstErrorSize
+                targetBurstErrorFrequency = burstErrorFrequency
+            }
+        private val noisyChannel = errorInducer.transform(encoder)
+        private val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
+            .transform(noisyChannel)
+
         override fun run()
         {
-            val dataGenerator = DataBlockGenerator(dataBlockSizeSlider.value.toInt())
-            val encoderObserver = object:Transformer.Observer
-            {
-                val rawInput = mutableListOf<ByteArray?>()
-                val rawOutput = mutableListOf<ByteArray?>()
-                override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
-                {
-                    rawInput += input
-                    rawOutput += output
-                }
-            }
-            val encoder = TransformerFlattener(codingStrategies.map {it.encoder})
-                .apply {transformObservers += encoderObserver}
-                .transform(dataGenerator)
-            val errorInducerObserver = object:Transformer.Observer
-            {
-                val rawInput = mutableListOf<ByteArray?>()
-                val rawOutput = mutableListOf<ByteArray?>()
-                override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
-                {
-                    rawInput += input
-                    rawOutput += output
-                }
-            }
-            val errorInducer = ErrorInducer()
-                .apply {transformObservers += errorInducerObserver}
-            val noisyChannel = errorInducer.transform(encoder)
-            val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
-                .transform(noisyChannel)
-
-            // update error inducer and data block generator as per inputs
-            dataGenerator.dataBlockSize = dataBlockSizeSlider.value.toInt()
-            errorInducer.minBurstLength = minBurstErrorSizeSlider.value.toInt()
-            errorInducer.maxBurstLength = maxBurstErrorSizeSlider.value.toInt()
-            errorInducer.targetBurstErrorFrequency = burstErrorFrequencySlider.value/100
-
             // simulate & collect statistics
             while (!isInterrupted)
             {
                 // todo: do statistics based on blocks not bits!
                 val decoded = decoder.next()?.toList()
-                val rawdata = encoderObserver.rawInput.map {it?.toList()}
-                val encoded = encoderObserver.rawOutput.map {it?.toList()}
+                val rawdata = encoderObserver.rawInput.map {it!!.toList()}
+                val encoded = encoderObserver.rawOutput.map {it!!.toList()}
+                val allDecodedBlocks = listOf(decoded)+decoder.next(rawdata.size-1).map {it?.toList()}
                 encoderObserver.rawInput.clear()
                 encoderObserver.rawOutput.clear()
-                val preError = errorInducerObserver.rawInput.map {it?.toList()}
                 val postError = errorInducerObserver.rawOutput.map {it?.toList()}
-                errorInducerObserver.rawInput.clear()
                 errorInducerObserver.rawOutput.clear()
-                totalDataBitsEncoded += rawdata.flatMap {it?:emptyList()}.size
-                totalCodeBits += encoded.flatMap {it?:emptyList()}.size
-                bitErrorCount += (preError.flatMap {it!!}.flatMap {it.bits} zip postError.flatMap {it!!}.flatMap {it.bits}).count {it.first != it.second}
-                burstErrorCount = errorInducer.burstErrorCounter
-                val (badBitsAccepted,goodBitsAccepted) = (rawdata.flatMap {it!!}.flatMap {it.bits} zip (decoded?:emptyList()).flatMap {it.bits}).partition {it.first != it.second}
-                badBitsAcceptedCount += badBitsAccepted.size
-                badBitsRejectedCount += if (decoded == null) dataGenerator.dataBlockSize else 0
-                goodBitsAcceptedCount += goodBitsAccepted.size
-                statsUpdater.update()
+                listener.onCycle(rawdata,encoded.single(),postError.single()!!,allDecodedBlocks)
             }
+        }
+
+        interface Listener
+        {
+            fun onCycle(dataBlocks:List<List<Byte>>,codeBlock:List<Byte>,noisyCodeBlock:List<Byte>,decodedBlocks:List<List<Byte>?>)
         }
     }
 
@@ -272,5 +295,13 @@ class SimulatorPanel:VBox(),Initializable,Closeable
                 futureUpdate = update
             }
         }
+    }
+
+    init
+    {
+        val fxmlLoader = FXMLLoader(javaClass.classLoader.getResource("window_simulator.fxml")!!)
+        fxmlLoader.setRoot(this)
+        fxmlLoader.setController(this)
+        fxmlLoader.load<Any>()
     }
 }

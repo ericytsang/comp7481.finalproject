@@ -26,3 +26,8 @@ val Collection<Boolean>.byte:Byte get()
         if (bit) byte or 0b10000000.ushr(i) else byte
     }.toByte()
 }
+
+fun <T> Iterator<T>.next(n:Int):List<T>
+{
+    return (1..n).map {next()}
+}

@@ -50,13 +50,13 @@
                 </VBox>
                 <VBox spacing="8.0">
                     <SubstituteLabel fx:id="efficiencyLabel" text="Code rate: $%" />
-                    <SubstituteLabel fx:id="totalDataTxLabel" text="Total data bits encoded: $ bits" />
-                    <SubstituteLabel fx:id="totalCodeLabel" text="Total code bits: $ bits" />
-                    <SubstituteLabel fx:id="bitErrorCountLabel" text="Bit error count: $ bits" />
-                    <SubstituteLabel fx:id="burstErrorCountLabel" text="Burst error count: $ bursts" />
-                    <SubstituteLabel fx:id="errorsDiscardedLabel" text="Bits discarded: $ bits" />
-                    <SubstituteLabel fx:id="errorsAcceptedLabel" text="Erroneous bits accepted: $ bits" />
-                    <SubstituteLabel fx:id="normalAcceptedLabel" text="Correct bits accepted: $ bits" />
+                    <SubstituteLabel fx:id="dataBlocksEncodedLabel" text="Data blocks encoded: $ blocks" />
+                    <SubstituteLabel fx:id="codeBlocksCorruptedLabel" text="Code blocks corrupted: $ blocks" />
+                    <SubstituteLabel fx:id="dataBlocksCorruptedLabel" text="Data blocks corrupted: $ blocks" />
+                    <SubstituteLabel fx:id="dataBlocksAcceptedLabel" text="Data blocks accepted: $ blocks" />
+                    <SubstituteLabel fx:id="dataBlocksRecoveredLabel" text="Data blocks recovered: $ blocks" />
+                    <SubstituteLabel fx:id="dataBlocksDiscardedLabel" text="Data blocks discarded: $ blocks" />
+                    <SubstituteLabel fx:id="corruptDataBlocksAcceptedLabel" text="Corrupt data blocks accepted: $ blocks" />
                 </VBox>
                 <PieChart
                     fx:id="pieChart"
