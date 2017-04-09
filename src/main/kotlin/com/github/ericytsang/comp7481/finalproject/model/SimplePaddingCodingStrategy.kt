@@ -17,6 +17,5 @@ class SimplePaddingCodingStrategy(val padding:ByteArray):CodingStrategy
         }
     }
 }
-// todo bit error diffusion
 // todo checksum
 // todo repeat message n times
