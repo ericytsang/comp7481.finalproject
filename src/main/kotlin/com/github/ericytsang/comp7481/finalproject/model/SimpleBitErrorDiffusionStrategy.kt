@@ -73,6 +73,6 @@ class SimpleBitErrorDiffusionStrategy(val dataBlocksPerCodeBlock:Int):CodingStra
     }
     override fun toString():String
     {
-        return "Error diffusion (transpose $dataBlocksPerCodeBlock data blocks per code block)"
+        return "Error diffusion (pack $dataBlocksPerCodeBlock data blocks per code block)"
     }
 }

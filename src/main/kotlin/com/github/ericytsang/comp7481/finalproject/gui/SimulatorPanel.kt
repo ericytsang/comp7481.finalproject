@@ -3,10 +3,7 @@ package com.github.ericytsang.comp7481.finalproject.gui
 import com.github.ericytsang.comp7481.finalproject.model.CodingStrategy
 import com.github.ericytsang.comp7481.finalproject.model.DataBlockGenerator
 import com.github.ericytsang.comp7481.finalproject.model.ErrorInducer
-import com.github.ericytsang.comp7481.finalproject.model.SimpleHammingCodingStrategy
-import com.github.ericytsang.comp7481.finalproject.model.Transformer
 import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
-import com.github.ericytsang.comp7481.finalproject.model.bits
 import com.github.ericytsang.comp7481.finalproject.model.monitored
 import com.github.ericytsang.comp7481.finalproject.model.next
 import com.github.ericytsang.lib.concurrent.future
@@ -44,9 +41,13 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     @FXML lateinit var codeBlocksCorruptedLabel:SubstituteLabel
     @FXML lateinit var dataBlocksCorruptedLabel:SubstituteLabel
     @FXML lateinit var dataBlocksAcceptedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksAcceptedPercentLabel:SubstituteLabel
     @FXML lateinit var dataBlocksRecoveredLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksRecoveredPercentLabel:SubstituteLabel
     @FXML lateinit var dataBlocksDiscardedLabel:SubstituteLabel
+    @FXML lateinit var dataBlocksDiscardedPercentLabel:SubstituteLabel
     @FXML lateinit var corruptDataBlocksAcceptedLabel:SubstituteLabel
+    @FXML lateinit var corruptDataBlocksAcceptedPercentLabel:SubstituteLabel
     @FXML lateinit var pieChart:PieChart
 
     private var efficiency:Byte = 0
@@ -57,6 +58,9 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     private var dataBlocksRecovered:Long = 0
     private var dataBlocksDiscarded:Long = 0
     private var corruptDataBlocksAccepted:Long = 0
+
+    private val decimalFormat = DecimalFormat("0.00")
+
     private val statsUpdater = object:UiComponent()
     {
         private val dataBlocksAcceptedPieData = PieChart.Data("Data blocks accepted",0.0)
@@ -76,9 +80,13 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             codeBlocksCorruptedLabel.substitute(codeBlocksCorrupted.toString())
             dataBlocksCorruptedLabel.substitute(dataBlocksCorrupted.toString())
             dataBlocksAcceptedLabel.substitute(dataBlocksAccepted.toString())
+            dataBlocksAcceptedPercentLabel.substitute(dataBlocksAccepted.div(dataBlocksEncoded.toDouble()).times(100).let {decimalFormat.format(it)})
             dataBlocksRecoveredLabel.substitute(dataBlocksRecovered.toString())
+            dataBlocksRecoveredPercentLabel.substitute(dataBlocksRecovered.div(dataBlocksEncoded.toDouble()).times(100).let {decimalFormat.format(it)})
             dataBlocksDiscardedLabel.substitute(dataBlocksDiscarded.toString())
+            dataBlocksDiscardedPercentLabel.substitute(dataBlocksDiscarded.div(dataBlocksEncoded.toDouble()).times(100).let {decimalFormat.format(it)})
             corruptDataBlocksAcceptedLabel.substitute(corruptDataBlocksAccepted.toString())
+            corruptDataBlocksAcceptedPercentLabel.substitute(corruptDataBlocksAccepted.div(dataBlocksEncoded.toDouble()).times(100).let {decimalFormat.format(it)})
             dataBlocksAcceptedPieData.pieValue = dataBlocksAccepted.toDouble()
             dataBlocksRecoveredPieData.pieValue = dataBlocksRecovered.toDouble()
             dataBlocksDiscardedPieData.pieValue = dataBlocksDiscarded.toDouble()
@@ -92,7 +100,6 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     private val controlsUpdater = object:UiComponent()
     {
-        private val decimalFormat = DecimalFormat("0.00")
         fun update() = publishUpdate()
         {
             dataBlockSizeLabel.substitute(dataBlockSizeSlider.value.toInt().toString())
@@ -205,10 +212,6 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             }
             dataBlocksDiscarded += decodedBlocks.count {it == null}
             corruptDataBlocksAccepted += zipped.count {it.second != null && it.first != it.second}
-//            zipped.forEach {
-//                if (it.second != null && it.first != it.second) println("corrupt&accepted dataBlocks: $dataBlocks, codeBlock: $codeBlock, noisyCodeBlock: $noisyCodeBlock ,decodedBlocks: $decodedBlocks")
-//                if (isCorrupted && it.first == it.second) println("corrupt&recovered dataBlocks: $dataBlocks, codeBlock: $codeBlock, noisyCodeBlock: $noisyCodeBlock ,decodedBlocks: $decodedBlocks")
-//            }
             statsUpdater.update()
         }
     }

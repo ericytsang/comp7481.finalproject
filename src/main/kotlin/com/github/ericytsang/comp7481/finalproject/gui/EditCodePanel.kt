@@ -2,7 +2,9 @@ package com.github.ericytsang.comp7481.finalproject.gui
 
 import com.github.ericytsang.comp7481.finalproject.model.CodingStrategy
 import com.github.ericytsang.comp7481.finalproject.model.SimpleBitErrorDiffusionStrategy
+import com.github.ericytsang.comp7481.finalproject.model.SimpleChecksumCodingStrategy
 import com.github.ericytsang.comp7481.finalproject.model.SimpleHammingCodingStrategy
+import com.github.ericytsang.comp7481.finalproject.model.SimpleRepeatedMessageCodingStrategy
 import javafx.application.Platform
 import javafx.beans.Observable
 import javafx.fxml.FXML
@@ -24,9 +26,6 @@ class EditCodePanel private constructor(val stage:Stage,val initialResult:Coding
     @FXML lateinit var errorDiffusionConfig:VBox
     @FXML lateinit var dataBlocksPerCodeBlockLabel:SubstituteLabel
     @FXML lateinit var dataBlocksPerCodeBlockSlider:Slider
-    @FXML lateinit var checksumConfig:VBox
-    @FXML lateinit var checksumByteLengthLabel:SubstituteLabel
-    @FXML lateinit var checksumByteLengthSlider:Slider
     @FXML lateinit var repeatedMessageConfig:VBox
     @FXML lateinit var repeatedMessageCountLabel:SubstituteLabel
     @FXML lateinit var repeatedMessageCountSlider:Slider
@@ -53,14 +52,21 @@ class EditCodePanel private constructor(val stage:Stage,val initialResult:Coding
                 codingStrategyComboBox.selectionModel.select(CodingStraregyOption.ERR_DIFFUSE.ordinal)
                 dataBlocksPerCodeBlockSlider.value = result.dataBlocksPerCodeBlock.toDouble()
             }
-        // todo: handle other encoding strategies
+            is SimpleChecksumCodingStrategy ->
+            {
+                codingStrategyComboBox.selectionModel.select(CodingStraregyOption.CHECKSUM.ordinal)
+            }
+            is SimpleRepeatedMessageCodingStrategy ->
+            {
+                codingStrategyComboBox.selectionModel.select(CodingStraregyOption.REPEAT_MSG.ordinal)
+                repeatedMessageCountSlider.value = result.times.toDouble()
+            }
             else -> throw RuntimeException("unhandled coding strategy")
         }
 
         // add listeners to input controls
         codingStrategyComboBox.valueProperty().addListener {_:Observable -> onCodingStrategyChanged()}
         dataBlocksPerCodeBlockSlider.valueProperty().addListener {_:Observable -> onConfigChanged()}
-        checksumByteLengthSlider.valueProperty().addListener {_:Observable -> onConfigChanged()}
         repeatedMessageCountSlider.valueProperty().addListener {_:Observable -> onConfigChanged()}
 
         Platform.runLater {onCodingStrategyChanged()}
@@ -85,8 +91,8 @@ class EditCodePanel private constructor(val stage:Stage,val initialResult:Coding
         {
             CodingStraregyOption.HAMMING -> Unit
             CodingStraregyOption.ERR_DIFFUSE -> configArea.children.add(errorDiffusionConfig)
-            CodingStraregyOption.CHECKSUM -> TODO()
-            CodingStraregyOption.REPEAT_MSG -> TODO()
+            CodingStraregyOption.CHECKSUM -> Unit
+            CodingStraregyOption.REPEAT_MSG -> configArea.children.add(repeatedMessageConfig)
             CodingStraregyOption.NONE -> Unit
         }
         stage.sizeToScene()
@@ -97,7 +103,6 @@ class EditCodePanel private constructor(val stage:Stage,val initialResult:Coding
     fun onConfigChanged()
     {
         dataBlocksPerCodeBlockLabel.substitute(dataBlocksPerCodeBlockSlider.value.toInt().toString())
-        checksumByteLengthLabel.substitute(checksumByteLengthSlider.value.toInt().toString())
         repeatedMessageCountLabel.substitute(repeatedMessageCountSlider.value.toInt().toString())
         val codingStrategy = try
         {
@@ -119,8 +124,14 @@ class EditCodePanel private constructor(val stage:Stage,val initialResult:Coding
             {
                 result = SimpleBitErrorDiffusionStrategy(dataBlocksPerCodeBlockSlider.value.toInt())
             }
-            CodingStraregyOption.CHECKSUM -> TODO()
-            CodingStraregyOption.REPEAT_MSG -> TODO()
+            CodingStraregyOption.CHECKSUM ->
+            {
+                result = SimpleChecksumCodingStrategy()
+            }
+            CodingStraregyOption.REPEAT_MSG ->
+            {
+                result = SimpleRepeatedMessageCodingStrategy(repeatedMessageCountSlider.value.toInt())
+            }
             CodingStraregyOption.NONE ->
             {
                 result = null

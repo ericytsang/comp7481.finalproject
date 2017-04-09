@@ -23,8 +23,8 @@
                     <SubstituteLabel fx:id="dataBlockSizeLabel" text="Data block size: $ bytes" />
                     <Slider
                         fx:id="dataBlockSizeSlider"
-                        min="1" max="16"
-                        majorTickUnit="4"
+                        min="1" max="128"
+                        majorTickUnit="32"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <SubstituteLabel fx:id="minBurstErrorSizeLabel" text="Minimum burst error length: $ bits" />
@@ -44,8 +44,8 @@
                     <SubstituteLabel fx:id="burstErrorFrequencyLabel" text="Burst error frequency: $%" />
                     <Slider
                         fx:id="burstErrorFrequencySlider"
-                        max="30"
-                        majorTickUnit="5"
+                        max="5"
+                        majorTickUnit="1.25"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <Button onAction="#resetStats" text="Reset statistics"/>
@@ -59,6 +59,10 @@
                     <SubstituteLabel fx:id="dataBlocksRecoveredLabel" text="Data blocks recovered: $ blocks" />
                     <SubstituteLabel fx:id="dataBlocksDiscardedLabel" text="Data blocks discarded: $ blocks" />
                     <SubstituteLabel fx:id="corruptDataBlocksAcceptedLabel" text="Corrupt data blocks accepted: $ blocks" />
+                    <SubstituteLabel fx:id="dataBlocksAcceptedPercentLabel" text="Data blocks accepted: $%" />
+                    <SubstituteLabel fx:id="dataBlocksRecoveredPercentLabel" text="Data blocks recovered: $%" />
+                    <SubstituteLabel fx:id="dataBlocksDiscardedPercentLabel" text="Data blocks discarded: $%" />
+                    <SubstituteLabel fx:id="corruptDataBlocksAcceptedPercentLabel" text="Corrupt data blocks accepted: $%" />
                 </VBox>
                 <PieChart
                     fx:id="pieChart"
