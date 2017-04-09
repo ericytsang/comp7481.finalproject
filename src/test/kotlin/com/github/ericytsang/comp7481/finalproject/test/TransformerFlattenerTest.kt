@@ -9,7 +9,7 @@ import java.util.Arrays
 
 class TransformerFlattenerTest
 {
-    val dataBlockDenerator = DataBlockGenerator().monitored()
+    val dataBlockGenerator = DataBlockGenerator().monitored()
     val codingStrategy = SimplePaddingCodingStrategy(byteArrayOf(0,0,0,0))
 
     @Test
@@ -18,7 +18,7 @@ class TransformerFlattenerTest
         val testSubject = TransformerFlattener(listOf(codingStrategy.encoder))
         check((1..1000)
             .asSequence()
-            .map {testSubject.transform(dataBlockDenerator)}
+            .map {testSubject.transform(dataBlockGenerator)}
             .all {it.next()!!.takeLast(codingStrategy.padding.size) == codingStrategy.padding.asList()})
     }
 
@@ -28,7 +28,7 @@ class TransformerFlattenerTest
         val testSubject = TransformerFlattener(listOf(codingStrategy.encoder,codingStrategy.encoder))
         check((1..1000)
             .asSequence()
-            .map {testSubject.transform(dataBlockDenerator)}
+            .map {testSubject.transform(dataBlockGenerator)}
             .all {it.next()!!.takeLast(codingStrategy.padding.size*2) == codingStrategy.padding.asList()+codingStrategy.padding.asList()})
     }
 
@@ -38,7 +38,7 @@ class TransformerFlattenerTest
         val testSubject = TransformerFlattener(listOf(codingStrategy.encoder,codingStrategy.decoder))
         check((1..1000)
             .asSequence()
-            .map {testSubject.transform(dataBlockDenerator)}
-            .all {Arrays.equals(it.next()!!,dataBlockDenerator.elements.single())})
+            .map {testSubject.transform(dataBlockGenerator)}
+            .all {Arrays.equals(it.next()!!,dataBlockGenerator.elements.single())})
     }
 }
