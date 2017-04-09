@@ -3,9 +3,11 @@ package com.github.ericytsang.comp7481.finalproject.gui
 import com.github.ericytsang.comp7481.finalproject.model.CodingStrategy
 import com.github.ericytsang.comp7481.finalproject.model.DataBlockGenerator
 import com.github.ericytsang.comp7481.finalproject.model.ErrorInducer
+import com.github.ericytsang.comp7481.finalproject.model.SimpleHammingCodingStrategy
 import com.github.ericytsang.comp7481.finalproject.model.Transformer
 import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
 import com.github.ericytsang.comp7481.finalproject.model.bits
+import com.github.ericytsang.lib.concurrent.future
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform
 import javafx.beans.Observable
@@ -18,6 +20,9 @@ import javafx.scene.layout.VBox
 import java.io.Closeable
 import java.net.URL
 import java.util.ResourceBundle
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -52,14 +57,18 @@ class SimulatorPanel:VBox(),Initializable,Closeable
     private val statsUpdater = object:UiComponent()
     {
         private val goodBitsAcceptedPieData = PieChart.Data("correct bits accepted",0.0)
+        private val correctedBitsAcceptedPieData = PieChart.Data("corrected bits accepted",0.0)
         private val badBitsAcceptedPieData = PieChart.Data("erroneous bits accepted",0.0)
         private val badBitsRejectedPieData = PieChart.Data("bits discarded",0.0)
         private val pieChartData = ObservableListWrapper(listOf(
-            goodBitsAcceptedPieData,badBitsAcceptedPieData,badBitsRejectedPieData))
+            goodBitsAcceptedPieData,
+            correctedBitsAcceptedPieData,
+            badBitsAcceptedPieData,
+            badBitsRejectedPieData))
 
         fun update() = publishUpdate()
         {
-            efficiencyLabel.substitute((totalDataBitsEncoded/(totalCodeBits.takeIf {it != 0.toLong()}?:1)*100).toString())
+            efficiencyLabel.substitute((totalDataBitsEncoded.toDouble()/(totalCodeBits.takeIf {it != 0.toLong()}?:1)*100).toString())
             totalDataTxLabel.substitute(totalDataBitsEncoded.toString())
             totalCodeLabel.substitute(totalCodeBits.toString())
             bitErrorCountLabel.substitute(bitErrorCount.toString())
@@ -67,7 +76,8 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             errorsDiscardedLabel.substitute(badBitsRejectedCount.toString())
             errorsAcceptedLabel.substitute(badBitsAcceptedCount.toString())
             normalAcceptedLabel.substitute(goodBitsAcceptedCount.toString())
-            goodBitsAcceptedPieData.pieValue = goodBitsAcceptedCount.toDouble()
+            goodBitsAcceptedPieData.pieValue = (goodBitsAcceptedCount-(bitErrorCount-badBitsAcceptedCount)).toDouble()
+            correctedBitsAcceptedPieData.pieValue = (bitErrorCount-badBitsAcceptedCount).toDouble()
             badBitsAcceptedPieData.pieValue = badBitsAcceptedCount.toDouble()
             badBitsRejectedPieData.pieValue = badBitsRejectedCount.toDouble()
             if (pieChart.data !== pieChartData)
@@ -85,6 +95,22 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             burstErrorFrequencyLabel.substitute(burstErrorFrequencySlider.value.let {Math.round(it)}.toString())
             minBurstErrorSizeLabel.substitute(minBurstErrorSizeSlider.value.let {Math.round(it)}.toString())
             maxBurstErrorSizeLabel.substitute(maxBurstErrorSizeSlider.value.let {Math.round(it)}.toString())
+        }
+    }
+
+    private val workerExecutor = object
+    {
+        private val executorService = Executors.newSingleThreadExecutor()
+        private var lastFuture:FutureTask<*>? = null
+        fun submitTask(task:()->Unit)
+        {
+            lastFuture?.cancel(false)
+            lastFuture = future(false,block = task)
+            executorService.execute(lastFuture)
+        }
+        fun close()
+        {
+            executorService.shutdown()
         }
     }
 
@@ -117,6 +143,7 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     override fun close()
     {
+        workerExecutor.close()
         worker?.interrupt()
     }
 
@@ -133,69 +160,70 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     @FXML fun onInputsChanged()
     {
-        // enforce input constraints
-        if (!minBurstErrorSizeSlider.isValueChanging)
+        workerExecutor.submitTask()
         {
-            minBurstErrorSizeSlider.value = Math.min(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
-        }
-        if (!maxBurstErrorSizeSlider.isValueChanging)
-        {
-            maxBurstErrorSizeSlider.value = Math.max(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
-        }
+            // enforce input constraints
+            if (!minBurstErrorSizeSlider.isValueChanging)
+            {
+                minBurstErrorSizeSlider.value = Math.min(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
+            }
+            if (!maxBurstErrorSizeSlider.isValueChanging)
+            {
+                maxBurstErrorSizeSlider.value = Math.max(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
+            }
 
-        // update UI
-        controlsUpdater.update()
+            // update UI
+            controlsUpdater.update()
 
-        // restart worker
-        worker = Worker(codePanel.items.map {it.codingStrategy})
+            // restart worker
+            worker = Worker(listOf(SimpleHammingCodingStrategy())/*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
+        }
     }
 
-    private inner class Worker(codingStrategies:List<CodingStrategy>):Thread()
+    private inner class Worker(val codingStrategies:List<CodingStrategy>):Thread()
     {
-        val dataGenerator = DataBlockGenerator(dataBlockSizeSlider.value.toInt())
-        private val encoderObserver = object:Transformer.Observer
+        override fun run()
         {
-            val rawInput = mutableListOf<ByteArray?>()
-            val rawOutput = mutableListOf<ByteArray?>()
-            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+            val dataGenerator = DataBlockGenerator(dataBlockSizeSlider.value.toInt())
+            val encoderObserver = object:Transformer.Observer
             {
-                rawInput += input
-                rawOutput += output
+                val rawInput = mutableListOf<ByteArray?>()
+                val rawOutput = mutableListOf<ByteArray?>()
+                override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+                {
+                    rawInput += input
+                    rawOutput += output
+                }
             }
-        }
-        private val encoder = TransformerFlattener(codingStrategies.map {it.encoder})
-            .apply {transformObservers += encoderObserver}
-            .transform(dataGenerator)
-        private val errorInducerObserver = object:Transformer.Observer
-        {
-            val rawInput = mutableListOf<ByteArray?>()
-            val rawOutput = mutableListOf<ByteArray?>()
-            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+            val encoder = TransformerFlattener(codingStrategies.map {it.encoder})
+                .apply {transformObservers += encoderObserver}
+                .transform(dataGenerator)
+            val errorInducerObserver = object:Transformer.Observer
             {
-                rawInput += input
-                rawOutput += output
+                val rawInput = mutableListOf<ByteArray?>()
+                val rawOutput = mutableListOf<ByteArray?>()
+                override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
+                {
+                    rawInput += input
+                    rawOutput += output
+                }
             }
-        }
-        val errorInducer = ErrorInducer()
-            .apply {transformObservers += errorInducerObserver}
-        private val noisyChannel = errorInducer.transform(encoder)
-        private val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
-            .transform(noisyChannel)
+            val errorInducer = ErrorInducer()
+                .apply {transformObservers += errorInducerObserver}
+            val noisyChannel = errorInducer.transform(encoder)
+            val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
+                .transform(noisyChannel)
 
-        init
-        {
             // update error inducer and data block generator as per inputs
             dataGenerator.dataBlockSize = dataBlockSizeSlider.value.toInt()
             errorInducer.minBurstLength = minBurstErrorSizeSlider.value.toInt()
             errorInducer.maxBurstLength = maxBurstErrorSizeSlider.value.toInt()
             errorInducer.targetBurstErrorFrequency = burstErrorFrequencySlider.value/100
-        }
 
-        override fun run()
-        {
             // simulate & collect statistics
             while (!isInterrupted)
             {
+                // todo: do statistics based on blocks not bits!
                 val decoded = decoder.next()?.toList()
                 val rawdata = encoderObserver.rawInput.map {it?.toList()}
                 val encoded = encoderObserver.rawOutput.map {it?.toList()}

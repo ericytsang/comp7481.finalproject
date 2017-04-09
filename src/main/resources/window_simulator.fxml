@@ -20,25 +20,25 @@
             <HBox spacing="8.0">
                 <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0" /></padding>
                 <VBox spacing="8.0">
-                    <SubstituteLabel fx:id="dataBlockSizeLabel" text="Data block size: $ bits" />
+                    <SubstituteLabel fx:id="dataBlockSizeLabel" text="Data block size: $ bytes" />
                     <Slider
                         fx:id="dataBlockSizeSlider"
-                        min="1" max="8192"
-                        majorTickUnit="2048"
+                        min="1" max="16"
+                        majorTickUnit="4"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <SubstituteLabel fx:id="minBurstErrorSizeLabel" text="Minimum burst error length: $ bits" />
                     <Slider
                         fx:id="minBurstErrorSizeSlider"
-                        min="1" max="8192"
-                        majorTickUnit="2048"
+                        min="1" max="128"
+                        majorTickUnit="32"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <SubstituteLabel fx:id="maxBurstErrorSizeLabel" text="Maximum burst error length: $ bits" />
                     <Slider
                         fx:id="maxBurstErrorSizeSlider"
-                        min="1" max="8192"
-                        majorTickUnit="2048"
+                        min="1" max="128"
+                        majorTickUnit="32"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <SubstituteLabel fx:id="burstErrorFrequencyLabel" text="Burst error frequency: $%" />
