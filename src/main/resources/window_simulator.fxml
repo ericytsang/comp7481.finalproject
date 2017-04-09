@@ -44,6 +44,8 @@
                     <SubstituteLabel fx:id="burstErrorFrequencyLabel" text="Burst error frequency: $%" />
                     <Slider
                         fx:id="burstErrorFrequencySlider"
+                        max="30"
+                        majorTickUnit="5"
                         showTickLabels="true"
                         showTickMarks="true"/>
                     <Button onAction="#resetStats" text="Reset statistics"/>
