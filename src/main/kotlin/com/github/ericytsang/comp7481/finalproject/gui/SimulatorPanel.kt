@@ -236,10 +236,10 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             {
                 val decoded = decoder.next()?.toList()
                 val rawdata = dataGenerator.elements.map {it.toList()}
-                val encoded = encoder.elements.map {it!!.toList()}
+                val encoded = encoder.elements.flatMap {it!!.toList()}
                 val allDecodedBlocks = listOf(decoded)+decoder.next(rawdata.size-1).map {it?.toList()}
-                val postError = noisyChannel.elements.map {it?.toList()}
-                listener.onCycle(rawdata,encoded.single(),postError.single()!!,allDecodedBlocks)
+                val postError = noisyChannel.elements.flatMap {it!!.toList()}
+                listener.onCycle(rawdata,encoded,postError,allDecodedBlocks)
             }
         }
 
