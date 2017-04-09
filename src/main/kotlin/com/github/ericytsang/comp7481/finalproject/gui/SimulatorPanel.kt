@@ -92,12 +92,14 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     private val controlsUpdater = object:UiComponent()
     {
+        private val decimalFormat = DecimalFormat("0.00")
         fun update() = publishUpdate()
         {
-            dataBlockSizeLabel.substitute(dataBlockSizeSlider.value.let {Math.round(it)}.toString())
-            burstErrorFrequencyLabel.substitute(burstErrorFrequencySlider.value.let {Math.round(it)}.toString())
-            minBurstErrorSizeLabel.substitute(minBurstErrorSizeSlider.value.let {Math.round(it)}.toString())
-            maxBurstErrorSizeLabel.substitute(maxBurstErrorSizeSlider.value.let {Math.round(it)}.toString())
+            dataBlockSizeLabel.substitute(dataBlockSizeSlider.value.toInt().toString())
+            burstErrorFrequencyLabel.substitute(burstErrorFrequencySlider.value.let {decimalFormat.format(it)})
+            minBurstErrorSizeLabel.substitute(minBurstErrorSizeSlider.value.toInt().toString())
+            maxBurstErrorSizeLabel.substitute(maxBurstErrorSizeSlider.value.toInt().toString())
+            resetStats()
         }
     }
 
