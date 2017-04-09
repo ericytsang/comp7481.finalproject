@@ -31,3 +31,8 @@ fun <T> Iterator<T>.next(n:Int):List<T>
 {
     return (1..n).map {next()}
 }
+
+fun <T> Iterator<T>.monitored():MonitoredIterator<T>
+{
+    return MonitoredIterator(this)
+}

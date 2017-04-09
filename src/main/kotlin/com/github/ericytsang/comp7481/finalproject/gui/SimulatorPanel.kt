@@ -7,6 +7,7 @@ import com.github.ericytsang.comp7481.finalproject.model.SimpleHammingCodingStra
 import com.github.ericytsang.comp7481.finalproject.model.Transformer
 import com.github.ericytsang.comp7481.finalproject.model.TransformerFlattener
 import com.github.ericytsang.comp7481.finalproject.model.bits
+import com.github.ericytsang.comp7481.finalproject.model.monitored
 import com.github.ericytsang.comp7481.finalproject.model.next
 import com.github.ericytsang.lib.concurrent.future
 import com.sun.javafx.collections.ObservableListWrapper
@@ -213,36 +214,16 @@ class SimulatorPanel:VBox(),Initializable,Closeable
         val listener:Listener,
         val codingStrategies:List<CodingStrategy>):Thread()
     {
-        private val dataGenerator = DataBlockGenerator(dataBlockSize)
-        private val encoderObserver = object:Transformer.Observer
-        {
-            val rawInput = mutableListOf<ByteArray?>()
-            val rawOutput = mutableListOf<ByteArray?>()
-            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
-            {
-                rawInput += input
-                rawOutput += output
-            }
-        }
+        private val dataGenerator = DataBlockGenerator(dataBlockSize).monitored()
         private val encoder = TransformerFlattener(codingStrategies.map {it.encoder})
-            .apply {transformObservers += encoderObserver}
-            .transform(dataGenerator)
-        private val errorInducerObserver = object:Transformer.Observer
-        {
-            val rawOutput = mutableListOf<ByteArray?>()
-            override fun onTransform(input:List<ByteArray?>,output:ByteArray?)
-            {
-                rawOutput += output
-            }
-        }
+            .transform(dataGenerator).monitored()
         private val errorInducer = ErrorInducer()
             .apply {
-                transformObservers += errorInducerObserver
                 minBurstLength = minBurstErrorSize
                 maxBurstLength = maxBurstErrorSize
                 targetBurstErrorFrequency = burstErrorFrequency
             }
-        private val noisyChannel = errorInducer.transform(encoder)
+        private val noisyChannel = errorInducer.transform(encoder).monitored()
         private val decoder = TransformerFlattener(codingStrategies.asReversed().map {it.decoder})
             .transform(noisyChannel)
 
@@ -251,15 +232,11 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             // simulate & collect statistics
             while (!isInterrupted)
             {
-                // todo: do statistics based on blocks not bits!
                 val decoded = decoder.next()?.toList()
-                val rawdata = encoderObserver.rawInput.map {it!!.toList()}
-                val encoded = encoderObserver.rawOutput.map {it!!.toList()}
+                val rawdata = dataGenerator.elements.map {it.toList()}
+                val encoded = encoder.elements.map {it!!.toList()}
                 val allDecodedBlocks = listOf(decoded)+decoder.next(rawdata.size-1).map {it?.toList()}
-                encoderObserver.rawInput.clear()
-                encoderObserver.rawOutput.clear()
-                val postError = errorInducerObserver.rawOutput.map {it?.toList()}
-                errorInducerObserver.rawOutput.clear()
+                val postError = noisyChannel.elements.map {it?.toList()}
                 listener.onCycle(rawdata,encoded.single(),postError.single()!!,allDecodedBlocks)
             }
         }
