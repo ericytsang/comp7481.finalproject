@@ -160,23 +160,24 @@ class SimulatorPanel:VBox(),Initializable,Closeable
 
     @FXML fun onInputsChanged()
     {
+        // enforce input constraints
+        if (!minBurstErrorSizeSlider.isValueChanging)
+        {
+            minBurstErrorSizeSlider.value = Math.min(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
+        }
+        if (!maxBurstErrorSizeSlider.isValueChanging)
+        {
+            maxBurstErrorSizeSlider.value = Math.max(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
+        }
+
+        // update UI
+        controlsUpdater.update()
+
+        // restart worker
+        val worker = Worker(listOf(SimpleHammingCodingStrategy())/*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
         workerExecutor.submitTask()
         {
-            // enforce input constraints
-            if (!minBurstErrorSizeSlider.isValueChanging)
-            {
-                minBurstErrorSizeSlider.value = Math.min(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
-            }
-            if (!maxBurstErrorSizeSlider.isValueChanging)
-            {
-                maxBurstErrorSizeSlider.value = Math.max(minBurstErrorSizeSlider.value,maxBurstErrorSizeSlider.value)
-            }
-
-            // update UI
-            controlsUpdater.update()
-
-            // restart worker
-            worker = Worker(listOf(SimpleHammingCodingStrategy())/*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
+            this.worker = worker
         }
     }
 
