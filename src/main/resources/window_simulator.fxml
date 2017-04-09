@@ -9,7 +9,7 @@
 <?import javafx.scene.chart.PieChart?>
 <?import com.github.ericytsang.comp7481.finalproject.gui.SubstituteLabel?>
 <?import javafx.scene.control.Button?>
-<fx:root prefHeight="600.0" prefWidth="700.0" type="com.github.ericytsang.comp7481.finalproject.gui.SimulatorPanel"
+<fx:root prefHeight="500.0" prefWidth="800.0" type="com.github.ericytsang.comp7481.finalproject.gui.SimulatorPanel"
     xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.112">
 
     <BorderPane VBox.vgrow="ALWAYS">
@@ -50,7 +50,9 @@
                         showTickMarks="true"/>
                     <Button onAction="#resetStats" text="Reset statistics"/>
                 </VBox>
-                <VBox spacing="8.0">
+                <VBox
+                    HBox.hgrow="ALWAYS"
+                    spacing="8.0">
                     <SubstituteLabel fx:id="efficiencyLabel" text="Code rate: $%" />
                     <SubstituteLabel fx:id="dataBlocksEncodedLabel" text="Data blocks encoded: $ blocks" />
                     <SubstituteLabel fx:id="codeBlocksCorruptedLabel" text="Code blocks corrupted: $ blocks" />
