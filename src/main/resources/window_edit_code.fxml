@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.github.ericytsang.comp7481.finalproject.gui.EditCodePanel?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Slider?>
+<?import com.github.ericytsang.comp7481.finalproject.gui.SubstituteLabel?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<fx:root
+    type="com.github.ericytsang.comp7481.finalproject.gui.EditCodePanel"
+    xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.112"
+    spacing="8.0">
+
+    <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0" /></padding>
+
+    <ComboBox
+        fx:id="codingStrategyComboBox"
+        promptText="Coding strategy">
+        <items>
+            <FXCollections fx:factory="observableArrayList">
+                <String fx:value="Hamming" />
+                <String fx:value="Error diffusion" />
+                <String fx:value="Checksum" />
+                <String fx:value="Repeated message" />
+            </FXCollections>
+        </items>
+    </ComboBox>
+
+    <VBox fx:id="configArea">
+        <VBox fx:id="errorDiffusionConfig">
+            <SubstituteLabel
+                fx:id="dataBlocksPerCodeBlockLabel"
+                text="Data blocks per code block: $ blocks"/>
+            <Slider
+                fx:id="dataBlocksPerCodeBlockSlider"
+                min="1" max="128"
+                majorTickUnit="32"
+                showTickLabels="true"
+                showTickMarks="true"/>
+        </VBox>
+
+        <VBox fx:id="checksumConfig">
+            <SubstituteLabel
+                fx:id="checksumByteLengthLabel"
+                text="Checksum size: $ bytes"/>
+            <Slider
+                fx:id="checksumByteLengthSlider"
+                min="1" max="16"
+                majorTickUnit="4"
+                showTickLabels="true"
+                showTickMarks="true"/>
+        </VBox>
+
+        <VBox fx:id="repeatedMessageConfig">
+            <SubstituteLabel
+                fx:id="repeatedMessageCountLabel"
+                text="Repeat message $ times"/>
+            <Slider
+                fx:id="repeatedMessageCountSlider"
+                min="1" max="16"
+                majorTickUnit="4"
+                showTickLabels="true"
+                showTickMarks="true"/>
+        </VBox>
+    </VBox>
+
+    <HBox spacing="8.0" alignment="CENTER_RIGHT">
+        <Button
+            onAction="#onConfirm"
+            text="OK"/>
+        <Button
+            onAction="#onCancel"
+            text="Cancel"/>
+    </HBox>
+
+</fx:root>

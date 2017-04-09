@@ -160,4 +160,8 @@ class SimpleHammingCodingStrategy:CodingStrategy
             return groupedDataBits.map {it.byte}.toByteArray()
         }
     }
+    override fun toString():String
+    {
+        return "Hamming"
+    }
 }

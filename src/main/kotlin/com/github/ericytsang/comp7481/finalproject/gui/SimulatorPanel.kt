@@ -162,7 +162,7 @@ class SimulatorPanel:VBox(),Initializable,Closeable
             burstErrorFrequencySlider.value/100,
             dataBlockSizeSlider.value.toInt(),
             workerListener,
-            emptyList()/*listOf(SimpleHammingCodingStrategy())*//*todo: uncomment codePanel.items.map {it.codingStrategy}*/)
+            codePanel.items.map {it.codingStrategy})
         workerExecutor.submitTask()
         {
             this.worker = worker

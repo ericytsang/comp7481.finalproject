@@ -35,6 +35,6 @@ class CodePanel:EditableTableView<CodePanel.RowItem>(),Initializable
 
     override fun createOrUpdateItem(previousInput:CodePanel.RowItem?):CodePanel.RowItem?
     {
-        throw UnsupportedOperationException("not implemented") // todo
+        return EditCodePanel.start(scene.window,previousInput?.codingStrategy)?.let {CodePanel.RowItem(it)}
     }
 }
