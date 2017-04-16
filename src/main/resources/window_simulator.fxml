@@ -19,7 +19,9 @@
         <bottom>
             <HBox spacing="8.0">
                 <padding><Insets bottom="8.0" left="8.0" right="8.0" top="8.0" /></padding>
-                <VBox spacing="8.0">
+                <VBox
+                    spacing="8.0"
+                    minWidth="400.0">
                     <SubstituteLabel fx:id="dataBlockSizeLabel" text="Data block size: $ bytes" />
                     <Slider
                         fx:id="dataBlockSizeSlider"
@@ -51,8 +53,8 @@
                     <Button onAction="#resetStats" text="Reset statistics"/>
                 </VBox>
                 <VBox
-                    HBox.hgrow="ALWAYS"
-                    spacing="8.0">
+                    spacing="8.0"
+                    HBox.hgrow="ALWAYS">
                     <SubstituteLabel fx:id="efficiencyLabel" text="Code rate: $%" />
                     <SubstituteLabel fx:id="dataBlocksEncodedLabel" text="Data blocks encoded: $ blocks" />
                     <SubstituteLabel fx:id="codeBlocksCorruptedLabel" text="Code blocks corrupted: $ blocks" />
