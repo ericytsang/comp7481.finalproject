@@ -41,6 +41,6 @@ task mainJar(type: Jar, dependsOn: classes) {
         exclude "META-INF/*.RSA"
     }
     manifest {
-        //todo attributes 'Main-Class': fullyQualifiedNameOfMainClass
+        attributes 'Main-Class': "com.github.ericytsang.comp7481.finalproject.gui.Main"
     }
 }
